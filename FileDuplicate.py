@@ -1,4 +1,4 @@
-#Automation script which accept directory name from user and display  the checksum of the files of that directory
+#Automation script which accept directory name from user and display all names of duplicate files from that directory
 
 from sys import *
 import os
@@ -19,26 +19,49 @@ def hashfile(path,blocksize=1024):  #1024kb We can given any blocksize. path is 
     
     return hasher.hexdigest() # actual checksum gets calculated here after getting all data
 
-def DisplayChecksum(path):
+def FindDuplicate(path):
     flag = os.path.isabs(path)
+
     if flag == False:
         path = os.path.abspath(path)
-    
+
     exists = os.path.isdir(path)
 
+    dups = {}    # This is dictionary to store duplicate files (checksum will be key and file name will be values)
+
     if exists:
-        for dirName, subdirs,fileList in os.walk(path):
-            print("Current folder is : ",dirName)
-            for filen in fileList:
-                path = os.path.join(dirName,filen)
+        for foldername, subfoldername, fileslist in os.walk(path):
+            for filen in fileslist:
+                path = os.path.join(foldername,filen)
                 file_hash = hashfile(path)
-                print(path)
-                print(file_hash)
-                print(' ')
+                if file_hash in dups:
+                    dups[file_hash].append(path)
+                else:
+                    dups[file_hash] = [path]
+            
+            return dups
     else:
         print("Invalid path")
+
+def PrintDuplicate(dict1):
+    results = list(filter(lambda x: len(x) > 1, dict1.values()))
+
+    if len(results) > 0:
+        print("Duplicates Found : ")
+
+        print("The following files are identical : ")
+
+        icnt = 0
+        for result in results:
+            for subresult in result:
+                icnt+=1
+                if icnt >= 2:
+                    print("\t\t%s"% subresult)
+    else:
+        print("No duplicate files found")
+
 def main():
-    print("---------------- Directory Watcher -------------------")
+    print("---------------- File Duplicate found-------------------")
 
     if(len(sys.argv) == 2):
          print("Error : Invalid number of arguments")
@@ -53,9 +76,10 @@ def main():
         exit()
 
     try:
-            
-        arr = DisplayChecksum(sys.argv[1])
-    
+        arr ={}
+        arr = FindDuplicate(sys.argv[1])
+        PrintDuplicate(arr)
+
     except ValueError:
         print("Error : Invalid datatype of input")
 
@@ -73,24 +97,15 @@ if __name__ == "__main__":
 #if you open the file in binary mode then you can open any kind of file to calculate checksum (audio,video,img,nay kind of file)
 
 # Output:
-# C:\Users\Priyanka\Desktop\Python_2024\01-06-2024>python DirectoryFileChecksum.py test
-# ---------------- Directory Watcher -------------------
+# C:\Users\Priyanka\Desktop\Python_2024\01-06-2024>python FileDuplicate.py test
+# ---------------- File Duplicate found-------------------
 # Error : Invalid number of arguments
-# Current folder is :  C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test
-# C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\duplicate.c
-# 38bc92405c17ba12fda1f5ce3124c4f6
-
-# C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\program161.c
-# 38bc92405c17ba12fda1f5ce3124c4f6
-
-# C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\program162.c
-# 9cb00a44e52e0390d24fb241c6900eb8
-
-# C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\program163.c
-# 0315b2dfbda782c7b8d74acee214b169
-
-# C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\program164.c
-# e2cedc014f44219d33369a52bd965853
-
+# Duplicates Found :
+# The following files are identical :
+#                 C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\program161 - Copy (2).c
+#                 C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\program161 - Copy.c
+#                 C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\program161.c
+#                 C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\program163.c
+#                 C:\Users\Priyanka\Desktop\Python_2024\01-06-2024\test\program163.pdf
 # --------- Thank you for using our script -------------
 # ------------- Marvellous Infosystems -----------------
